@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+vid-env/
+
+# Environment variables
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python egg metadata
+*.egg-info/
+dist/
+build/
+
+# Cache and logs
+.cache/
+*.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Streamlit cache
+.streamlit/
+
+# Video and media outputs
+*.mp4
+*.avi
+*.mov
+
+# PDF outputs (if you want to ignore generated/cropped PDFs)
+sample_physics_cropped.pdf
+
+# Misc
+*.bak
+*.swp 
