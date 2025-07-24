@@ -5,4 +5,7 @@ chromadb
 tiktoken
 openai
 requests
-python-dotenv 
+python-dotenv
+google-generativeai
+google-cloud-aiplatform
+google-genai 

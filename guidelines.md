@@ -4,7 +4,7 @@
 
 ## 150‑Word Executive Summary
 
-Automated Textbook Explainer Video Generator is a one‑day hackathon prototype that converts any OpenStax PDF chapter into a concise, student‑friendly video explanation. A minimalist Streamlit UI lets students select a chapter/section or type a free‑text question. Under the hood: the PDF is parsed into hierarchical chunks, vector‑indexed with embeddings, and searched via a hybrid retriever that returns only the three most relevant leaf chunks. GPT‑4o turns those chunks into a 60‑second instructional script, which D‑ID renders as a talking‑head video. The entire flow runs locally with Python, Streamlit, ChromaDB, and two external APIs (OpenAI, D‑ID). The result is a demo‑ready tool that showcases fast document retrieval, LLM‑powered pedagogy, and automated video generation—all built in under a day.
+Automated Textbook Explainer Video Generator is a one‑day hackathon prototype that converts any OpenStax PDF chapter into a concise, student‑friendly video explanation. A minimalist Streamlit UI lets students select a chapter/section or type a free‑text question. Under the hood: the PDF is parsed into hierarchical chunks, vector‑indexed with embeddings, and searched via a hybrid retriever that returns only the three most relevant leaf chunks. GPT‑4o turns those chunks into a 30‑second instructional script with scene descriptions, which Google's Veo 2 renders as a cinematic educational video with native audio-visual sync. The entire flow runs locally with Python, Streamlit, ChromaDB, and two external APIs (OpenAI, Google Gemini). The result is a demo‑ready tool that showcases fast document retrieval, LLM‑powered pedagogy, and state-of-the-art video generation—all built in under a day.
 
 ---
 
@@ -12,7 +12,7 @@ Automated Textbook Explainer Video Generator is a one‑day hackathon prototype 
 
 ## Section 0 · Pre‑Hackathon Admin  *20 min*  ✅ **COMPLETED**
 
-1. Collect `OPENAI_API_KEY`, `DID_API_KEY`.
+1. Collect `OPENAI_API_KEY`, `GOOGLE_API_KEY` (for Gemini/Veo 2).
 2. Download/crop sample PDF.
 3. Install Python 3.11, create venv.
 4. Open project folder in Cursor, stash keys locally.
@@ -39,7 +39,7 @@ openstax-vid-gen/
 │   ├── explainer.py                          # LLM script generator placeholder
 │   └── __init__.py
 ├── video/
-│   ├── did_client.py                         # D-ID API client placeholder
+│   ├── veo_generator.py                      # Veo 2 + Gemini API integration
 │   └── __init__.py
 ├── cache/
 │   ├── chroma/                               # ChromaDB vector database
@@ -94,17 +94,19 @@ python-dotenv
 * ✅ **Test:** `python retriever.py` → tests 5 different query types
 * ✅ **Performance:** Correctly handles both content queries ("What are significant figures?") and structural queries ("What is section 1.1 about?")
 
-## Section 7 · LLM Script Generator  *30 min*  **PENDING**
+## Section 7 · LLM Script Generator  *30 min*  ✅ **COMPLETED**
 
-* `llm/explainer.py` – GPT-4o integration to generate scripts from retrieved chunks
-* Function signature: `generate_script(chunks: List[Dict]) -> str`
-* Prompt engineering for 60-second educational videos
+* ✅ `llm/explainer.py` – GPT-4o integration to generate scripts from retrieved chunks
+* ✅ Function signature: `generate_script(chunks: List[Dict]) -> str`
+* ✅ Prompt engineering for 30-second educational videos with scene descriptions
+* ✅ **Updated for Veo 2:** Scene-based format instead of talking-head scripts
 
-## Section 8 · D‑ID Video API  *30 min*  **PENDING**
+## Section 8 · Veo 2 Video Generation  *30 min*  **PENDING**
 
-* `video/did_client.py` – D-ID API integration
+* `video/veo_generator.py` – Google Veo 2 via Gemini API integration
 * Function signature: `create_video(script: str) -> str` (returns video URL)
-* Caching by script hash to avoid duplicate API calls
+* Cinematic educational videos with native audio-visual synchronization
+* 4K quality output with dynamic scene generation
 
 ## Section 9 · Orchestration Pipeline  *20 min*  **PENDING**
 
@@ -113,10 +115,10 @@ python-dotenv
 def generate_video(query: str) -> str:
     # 1. Use retriever to get relevant chunks
     chunks = retriever.search(query, top_k=3)
-    # 2. Generate script from chunks
+    # 2. Generate scene-based script from chunks
     script = explainer.generate_script(chunks)
-    # 3. Create video from script
-    video_url = did_client.create_video(script)
+    # 3. Create cinematic video from script using Veo 2
+    video_url = veo_generator.create_video(script)
     return video_url
 ```
 
@@ -125,8 +127,9 @@ def generate_video(query: str) -> str:
 * Update `app.py` with full UI
 * Free-text input box for queries
 * Optional chapter/section dropdown
-* Video player for results
+* Video player for 4K Veo 2 results
 * Show retrieved chunks/pages for transparency
+* Progress indicators for video generation
 
 ## Section 11 · Quality of Life  *30 min*  **PENDING**
 
@@ -156,6 +159,8 @@ Complete README, demo video/GIF, tag release.
 | LangChain SelfQueryRetriever | Custom metadata parsing + direct ChromaDB | LangChain deprecation warnings, missing dependencies |
 | Complex BM25 + cosine hybrid | Metadata filtering + cosine similarity + MMR | Simpler, more reliable implementation |
 | LangChain dependencies | Direct ChromaDB + OpenAI APIs | Fewer dependencies, more stable |
+| D-ID talking-head videos | **Veo 2 cinematic videos via Gemini API** | **Superior quality (4K), native audio-sync, educational animations** |
+| 60-second presenter scripts | **30-second scene-based descriptions** | **Optimized for Veo 2's capabilities and attention span** |
 
 ## 📊 **Current Performance Metrics**
 
@@ -169,10 +174,10 @@ Complete README, demo video/GIF, tag release.
 ## **Next Steps (Sections 7-12)**
 
 The foundation is solid and tested. Ready to implement:
-1. **LLM Script Generator** - GPT-4o integration
-2. **D-ID Video API** - Video generation
+1. ✅ **LLM Script Generator** - GPT-4o integration (COMPLETED)
+2. **Veo 2 Video Generation** - Google Veo 2 via Gemini API  
 3. **Orchestration** - Connect all components
-4. **UI** - Streamlit interface
+4. **UI** - Streamlit interface with 4K video support
 5. **Polish** - Logging, caching, demo prep
 
 ---
