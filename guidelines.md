@@ -1,103 +1,121 @@
-# Automated Textbook Explainer Video Generator
+
+
+# Automated Textbook Explainer Video Generator – **Revised with Hybrid Semantic Retrieval**
 
 ## 150‑Word Executive Summary
 
-Automated Textbook Explainer Video Generator is a one‑day hackathon prototype that converts any OpenStax PDF chapter into a concise, student‑friendly video explanation on demand. Students launch a bare‑bones Streamlit app, select a chapter‑section, type what confused them, and within 30 seconds receive a 60‑second talking‑head clip. Under the hood: a Python backend parses PDF, finds the relevant section, summarizes it via GPT‑4o, and passes the script to D-ID’s API for instant avatar narration. With just Python, Streamlit, and two APIs, the project showcases document parsing, LLM-powered explainability, and automated video generation in a deployable workflow. The final product is a clean, demo-ready UI that lets any user go from textbook page to custom explainer video in under a minute—ideal for hackathons, education demos, and rapid prototyping.
+Automated Textbook Explainer Video Generator is a one‑day hackathon prototype that converts any OpenStax PDF chapter into a concise, student‑friendly video explanation. A minimalist Streamlit UI lets students select a chapter/section or type a free‑text question. Under the hood: the PDF is parsed into hierarchical chunks, vector‑indexed with embeddings, and searched via a hybrid (keyword + cosine) retriever that returns only the three most relevant leaf chunks (\~3–4 pages). GPT‑4o turns those chunks into a 60‑second instructional script, which D‑ID renders as a talking‑head video. The entire flow runs locally with Python, Streamlit, LangChain, Chroma, and two external APIs (OpenAI, D‑ID). The result is a demo‑ready tool that showcases fast document retrieval, LLM‑powered pedagogy, and automated video generation—all built in under a day.
 
 ---
 
-# Project Roadmap and Steps
+# **Project Roadmap (Revised)**
 
-## Section 0: Pre-Hackathon Admin
+## Section 0 · Pre‑Hackathon Admin  *20 min*  **(unchanged)**
 
-1. Gather API credentials for OpenAI and D-ID.
-2. Download OpenStax sample PDF (recommend cropping to just 1–2 chapters for speed).
-3. Install/confirm Python 3.11 and create a virtual environment with `pyenv` and `venv`.
-4. Prepare the project folder for Cursor, saving API keys and PDF locally (not checked in).
-5. Optional: Start a `NOTES.md` for links and test ideas.
-6. Double-check: API keys, cropped PDF, venv ready, project open in Cursor.
+1. Collect `OPENAI_API_KEY`, `DID_API_KEY`.
+2. Download/crop sample PDF.
+3. Install Python 3.11, create venv.
+4. Open project folder in Cursor, stash keys locally.
 
-## Section 1: Repository & Baseline
+## Section 1 · Repository & Baseline  *15 min*  **(unchanged)**
 
-1. Initialize git repo in Cursor workspace.
-2. Create `.gitignore` (ignore `.venv/`, `.env`, `*.mp4`, `cache/`, etc.).
-3. Add starter `README.md` and `LICENSE` (MIT).
-4. Commit baseline scaffold.
+Initialize git, `.gitignore`, `README.md`, MIT license, first commit.
 
-## Section 2: Project Skeleton
+## Section 2 · Project Skeleton  *25 min*  **(updated)**
 
-- Create full folder/file layout:
-  - `app.py` (Streamlit UI)
-  - `video_maker.py` (orchestration)
-  - `parsers/pdf_parser.py`, `llm/explainer.py`, `video/did_client.py`, `cache/`, `requirements.txt`, `.env.example`, `__init__.py` as needed
-- Add to git, commit.
+```
+textbook-video-gen/
+├── app.py              # Streamlit UI
+├── video_maker.py      # Orchestration
+├── indexer.py          # NEW – offline embed/chunk builder
+├── retriever.py        # NEW – structured + hybrid search
+│
+├── parsers/
+│   └── pdf_parser.py   # hierarchical splitter
+├── llm/
+│   └── explainer.py
+├── video/
+│   └── did_client.py
+├── cache/              # JSON + Chroma DB
+├── requirements.txt
+├── .env.example
+└── …
+```
 
-## Section 3: Env & Dependencies
+Commit: `chore: add skeleton with indexer/retriever`.
 
-- Write `requirements.txt` (streamlit, PyMuPDF, openai, requests, python-dotenv)
-- `pip install -r requirements.txt`
-- Commit.
+## Section 3 · Environment & Deps  *15 min*  **(changed)**
 
-## Section 4: PDF Parsing
+Add to `requirements.txt`:
 
-- Use PyMuPDF to parse only select chapters/pages (not whole PDF)
-- Extract sections/chunks, save as JSON for fast lookup.
-- Commit tested extraction code.
+```
+streamlit PyMuPDF langchain chromadb tiktoken openai requests python-dotenv
+```
 
-## Section 5: LLM Script Generator
+`pip install -r requirements.txt` → commit.
 
-- GPT-4o prompt template to explain section as a video script.
-- Function takes section text, returns script. Add a test.
-- Commit.
+## Section 4 · PDF Parsing & Chunking  *50 min*  **(expanded)**
 
-## Section 6: D-ID Video API
+* `parsers/pdf_parser.py` – detect section headings, then leaf‑split to 350‑token chunks with 20‑token overlap. Return list of dicts with metadata.
+* Unit‑test on cropped PDF.
 
-- Function to call D-ID API (1 credit per video).
-- Poll for result, return `result_url`.
-- Commit.
+## Section 5 · Embedding & Vector Index  *25 min*  **(new)**
 
-## Section 7: Orchestration
+* `indexer.py` – embeds every leaf chunk using `text-embedding-3-small`; stores vectors + metadata in local Chroma (`cache/chroma/`). Run once offline.
 
-- One function: parse → script → video (using above modules).
-- Commit.
+## Section 6 · Hybrid Retriever  *45 min*  **(new)**
 
-## Section 8: Streamlit UI
+* `retriever.py` – LangChain `SelfQueryRetriever` → metadata filter → hybrid (BM25 ∧ cosine) search → MMR top K = 3.
+* Returns list of ≤3 chunk texts.
 
-- File upload, dropdowns for chapter/section, textbox for question, button to generate video, video player in UI.
-- Commit.
+## Section 7 · LLM Script Generator  *30 min*  **(renumbered)**
 
-## Section 9: Quality of Life
+* `llm/explainer.py` unchanged but now receives ≤3 chunks or map‑reduced summary.
 
-- Add pre-commit hooks, logging, usage/cost tracking, cache for scripts/videos.
-- Commit.
+## Section 8 · D‑ID Video API  *30 min*  **(renumbered)**
 
-## Section 10: Demo Prep
+No change except caching `result_url` keyed by script hash.
 
-- Full flow tests, demo GIF/video, complete README.
-- Commit/tag as demo release.
+## Section 9 · Orchestration Pipeline  *20 min*  **(updated)**
 
-## Section 11: Submission Checklist
+`video_maker.generate(query_or_ref)`:
 
-- README, requirements.txt, .env.example, demo video/file.
+1. If explicit chapter/section → direct metadata filter.
+2. Else pass free text to `retriever.search()`.
+3. Feed returned chunks to `explainer.make_script`.
+4. Send script to `did_client.create_video`.
+
+## Section 10 · Streamlit UI  *45 min*  **(slight change)**
+
+* Add a free‑text box *or* chapter/section dropdown.
+* Show search progress & fetched pages.
+
+## Section 11 · Quality of Life  *30 min*
+
+Logging, token/cost tracker, pre‑commit, cache.
+
+## Section 12 · Demo Prep & Submission  *45 min*
+
+README, GIF, tag release.
 
 ---
 
-# Implementation Notes and Hackathon Best Practices
+# **What Changed vs. Previous Guide**
 
-- **Chunk, Search, and Summarize**: For large textbooks, always split into logical chunks (chapter/section or 1–2 pages) and store for fast search and retrieval. Use simple keyword or semantic search to find the right chunk and only send that to the LLM.
-- **Cropped PDF**: Never process the full 1,700-page Physics 2e during hackathon time. Pre-crop to one or two chapters or parse a specific page range.
-- **D-ID Credits**: 1 credit = 1 video; 12 credits = 12 avatar videos (plan and cache usage).
-- **LLM Context Window**: Keep context to one chunk/section at a time for speed and reliability. This is standard for industry-scale doc QA systems and hackathons alike.
-- **MVP-Friendly UI**: All demo logic runs in Python and Streamlit—focus on the backend/data flow, not on front-end polish.
+| Area             | Old                                  | New                                               |
+| ---------------- | ------------------------------------ | ------------------------------------------------- |
+| **Dependencies** | streamlit, PyMuPDF, openai, requests | **+ langchain, chromadb, tiktoken**               |
+| **Skeleton**     | No `indexer.py` / `retriever.py`     | **Added both files**                              |
+| **Parsing**      | Single‑level section split           | **Hierarchical split + leaf chunks**              |
+| **Retrieval**    | Simple keyword search                | **Self‑Query + hybrid vector/BM25 + MMR (top 3)** |
+| **LLM Calls**    | 1 call (script)                      | **2 calls** (router → script)                     |
+| **Total Time**   | \~5 h 10 m                           | **\~6 h 40 m** (adds ≈ 1.5 h for RAG)             |
 
-# Quick Reference: Sample Chunk Search Code
+---
 
-```python
-def search_chunks(user_query, chunks):
-    # Simple keyword search
-    query = user_query.lower()
-    for chunk in chunks:
-        if query in chunk["title"].lower() or query in chunk["text"].lower():
-            return chunk
-    # Fallback: first section of specified chapter
-    return next(c for c in chunks if c["chapter"] == desired_chapter)
+### Implementation Notes
+
+* **Embedding cost:** 100 leaf chunks ≈ 30 k tokens → <\$0.01.
+* **Runtime latency:** Retrieval < 0.3 s; GPT‑4o & D‑ID unchanged.
+* **Fallback:** If router fails to detect metadata, retriever still works via pure semantic search.
+

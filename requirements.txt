@@ -1,5 +1,8 @@
 streamlit
 pymupdf
+langchain
+chromadb
+tiktoken
 openai
 requests
 python-dotenv 
