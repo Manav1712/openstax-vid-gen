@@ -34,8 +34,27 @@ build/
 *.avi
 *.mov
 
-# PDF outputs (if you want to ignore generated/cropped PDFs)
+# PDF files (original and cropped)
+*.pdf
 sample_physics_cropped.pdf
+
+# Large generated JSON files
+*_chunks.json
+*_leaf_chunks.json
+sample_physics_cropped_leaf_chunks.json
+
+# ChromaDB and vector database
+cache/chroma/
+cache/*.db
+
+# Large model files and embeddings
+*.bin
+*.model
+*.vec
+
+# Test outputs and temporary files
+test_output/
+temp/
 
 # Misc
 *.bak
